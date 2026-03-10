@@ -321,18 +321,69 @@
       <li>Claim ownership of our intellectual property</li>
     </ul>
 
-    <h2>9. Disclaimers</h2>
+    <h2>9. Measurement Accuracy Disclaimer</h2>
+    <div class="warning">
+      <p><strong>NO GUARANTEE OF ACCURACY:</strong> DriftMeter does not guarantee the accuracy, precision, or reliability of any measurements, calculations, or metrics displayed in the App. All data is provided for informational and entertainment purposes only.</p>
+    </div>
+
+    <h3>9.1 Algorithmic Calculations</h3>
+    <p>DriftMeter employs advanced mathematical and physics-based algorithms to estimate drift metrics, including:</p>
+    <ul>
+      <li><strong>Kalman filtering:</strong> Statistical estimation techniques to reduce sensor noise and predict vehicle state</li>
+      <li><strong>Sensor fusion:</strong> Combining data from multiple sensors (GPS, accelerometer, gyroscope) to improve estimates</li>
+      <li><strong>GPS-IMU time alignment:</strong> Cross-correlation algorithms to synchronize location and motion data streams</li>
+      <li><strong>Yaw rate integration:</strong> Mathematical integration of gyroscope readings to estimate drift angle</li>
+      <li><strong>Speed derivation:</strong> Calculations based on GPS position changes and Doppler measurements</li>
+    </ul>
+    <p>These algorithms are based on sound mathematical principles and physics models; however, they are approximations that operate on imperfect real-world data. <strong>No algorithm can guarantee 100% accuracy.</strong></p>
+
+    <h3>9.2 Consumer Device Sensor Limitations</h3>
+    <p>DriftMeter relies on sensors built into consumer smartphones, which have inherent limitations:</p>
+    <ul>
+      <li><strong>GPS accuracy:</strong> Consumer GPS typically has accuracy of 3-10 meters, with potential for larger errors in certain conditions</li>
+      <li><strong>Sensor calibration:</strong> Device sensors may be improperly calibrated or degrade over time</li>
+      <li><strong>Sampling rates:</strong> Consumer devices may not maintain consistent sensor sampling rates under all conditions</li>
+      <li><strong>Hardware variations:</strong> Different device models and manufacturers have varying sensor quality and characteristics</li>
+      <li><strong>Sensor drift:</strong> Gyroscopes and accelerometers can experience cumulative drift errors over time</li>
+      <li><strong>Processing delays:</strong> Device processing load can introduce timing inconsistencies in sensor readings</li>
+    </ul>
+
+    <h3>9.3 External Factors Affecting Measurements</h3>
+    <p>Numerous external factors beyond our control can significantly impact measurement accuracy:</p>
+    <ul>
+      <li><strong>GPS signal quality:</strong> Buildings, trees, terrain, tunnels, and atmospheric conditions can degrade GPS accuracy</li>
+      <li><strong>Electromagnetic interference:</strong> Electronic equipment, power lines, and other devices can affect sensor readings</li>
+      <li><strong>Device mounting:</strong> Phone position, orientation, and stability in the vehicle affect sensor data quality</li>
+      <li><strong>Vehicle dynamics:</strong> Suspension movement, vibrations, and body roll can introduce noise into measurements</li>
+      <li><strong>Temperature:</strong> Extreme temperatures can affect sensor performance and battery-related processing throttling</li>
+      <li><strong>Surface conditions:</strong> Road surface, grip levels, and inclines are not accounted for in calculations</li>
+      <li><strong>Multi-path GPS errors:</strong> Signal reflections from nearby surfaces can cause position jumps</li>
+    </ul>
+
+    <h3>9.4 Not Suitable for Professional Use</h3>
+    <p>DriftMeter metrics are <strong>NOT suitable for:</strong></p>
+    <ul>
+      <li>Professional motorsport timing or official competition scoring</li>
+      <li>Vehicle safety assessments or engineering analysis</li>
+      <li>Insurance, legal, or liability determinations</li>
+      <li>Any application requiring certified or calibrated measurements</li>
+      <li>Comparison with professional telemetry systems</li>
+    </ul>
+    <p>For professional applications, use dedicated motorsport telemetry equipment with certified accuracy specifications.</p>
+
+    <h2>10. General Disclaimers</h2>
     <p><strong>THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.</strong></p>
     <p>We specifically disclaim:</p>
     <ul>
-      <li><strong>Accuracy:</strong> Drift metrics are calculated using consumer device sensors and algorithms that may have errors or inaccuracies</li>
+      <li><strong>Accuracy:</strong> As detailed in Section 9, all measurements are estimates subject to significant potential errors</li>
       <li><strong>Availability:</strong> The Services may be interrupted, delayed, or contain errors</li>
       <li><strong>Fitness:</strong> No warranty that the Services are suitable for any particular purpose</li>
       <li><strong>Security:</strong> No guarantee against unauthorized access or data breaches</li>
       <li><strong>Third parties:</strong> No responsibility for third-party services, links, or content</li>
+      <li><strong>Consistency:</strong> Results may vary between sessions, devices, and conditions even under similar circumstances</li>
     </ul>
 
-    <h2>10. Limitation of Liability</h2>
+    <h2>11. Limitation of Liability</h2>
     <p><strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW:</strong></p>
     <ul>
       <li>We shall not be liable for any indirect, incidental, special, consequential, or punitive damages</li>
@@ -342,7 +393,7 @@
     </ul>
     <p>Some jurisdictions do not allow the exclusion of certain warranties or limitations of liability, so some of the above may not apply to you.</p>
 
-    <h2>11. Indemnification</h2>
+    <h2>12. Indemnification</h2>
     <p>You agree to indemnify, defend, and hold harmless DriftMeter, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, costs, and expenses (including reasonable attorneys' fees) arising from:</p>
     <ul>
       <li>Your use of the Services</li>
@@ -352,12 +403,12 @@
       <li>Content you submit or share through the Services</li>
     </ul>
 
-    <h2>12. Termination</h2>
+    <h2>13. Termination</h2>
 
-    <h3>12.1 By You</h3>
+    <h3>13.1 By You</h3>
     <p>You may stop using the Services and delete your account at any time.</p>
 
-    <h3>12.2 By Us</h3>
+    <h3>13.2 By Us</h3>
     <p>We may suspend or terminate your access to the Services at any time, with or without cause, with or without notice, including for:</p>
     <ul>
       <li>Violation of these Terms</li>
@@ -367,7 +418,7 @@
       <li>Requests by law enforcement or government agencies</li>
     </ul>
 
-    <h3>12.3 Effect of Termination</h3>
+    <h3>13.3 Effect of Termination</h3>
     <p>Upon termination:</p>
     <ul>
       <li>Your right to use the Services immediately ceases</li>
@@ -375,7 +426,7 @@
       <li>Provisions that should survive termination will remain in effect (including Disclaimers, Limitation of Liability, and Indemnification)</li>
     </ul>
 
-    <h2>13. Changes to Terms</h2>
+    <h2>14. Changes to Terms</h2>
     <p>We may modify these Terms at any time. We will notify users of material changes by:</p>
     <ul>
       <li>Updating the "Last updated" date at the top</li>
@@ -383,12 +434,12 @@
     </ul>
     <p>Your continued use of the Services after changes constitutes acceptance of the modified Terms. If you do not agree to the changes, you must stop using the Services.</p>
 
-    <h2>14. Governing Law and Disputes</h2>
+    <h2>15. Governing Law and Disputes</h2>
 
-    <h3>14.1 Governing Law</h3>
+    <h3>15.1 Governing Law</h3>
     <p>These Terms are governed by and construed in accordance with the laws of the jurisdiction in which we operate, without regard to conflict of law principles.</p>
 
-    <h3>14.2 Dispute Resolution</h3>
+    <h3>15.2 Dispute Resolution</h3>
     <p>Any disputes arising from these Terms or the Services shall be resolved through:</p>
     <ul>
       <li><strong>Informal negotiation:</strong> We encourage you to contact us first to resolve any issues</li>
@@ -396,27 +447,27 @@
       <li><strong>Class action waiver:</strong> You agree to resolve disputes individually and waive any right to participate in class actions</li>
     </ul>
 
-    <h3>14.3 Exceptions</h3>
+    <h3>15.3 Exceptions</h3>
     <p>Nothing in this section prevents either party from seeking injunctive relief in court for intellectual property infringement or other urgent matters.</p>
 
-    <h2>15. General Provisions</h2>
+    <h2>16. General Provisions</h2>
 
-    <h3>15.1 Entire Agreement</h3>
+    <h3>16.1 Entire Agreement</h3>
     <p>These Terms, together with our Privacy Policy, constitute the entire agreement between you and DriftMeter regarding the Services.</p>
 
-    <h3>15.2 Severability</h3>
+    <h3>16.2 Severability</h3>
     <p>If any provision of these Terms is found to be unenforceable, the remaining provisions will continue in full force and effect.</p>
 
-    <h3>15.3 Waiver</h3>
+    <h3>16.3 Waiver</h3>
     <p>Our failure to enforce any right or provision of these Terms will not be considered a waiver of that right or provision.</p>
 
-    <h3>15.4 Assignment</h3>
+    <h3>16.4 Assignment</h3>
     <p>You may not assign or transfer these Terms without our consent. We may assign our rights and obligations without restriction.</p>
 
-    <h3>15.5 No Partnership</h3>
+    <h3>16.5 No Partnership</h3>
     <p>Nothing in these Terms creates a partnership, joint venture, or agency relationship between you and DriftMeter.</p>
 
-    <h2>16. Contact Us</h2>
+    <h2>17. Contact Us</h2>
     <p>For questions about these Terms of Service:</p>
     <ul>
       <li><strong>Email:</strong> <a href="mailto:driftmeterapp@gmail.com">driftmeterapp@gmail.com</a></li>
