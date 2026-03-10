@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DriftMeter — Professional-grade drift telemetry. Measure slip angles, track G-forces, analyze sessions with aerospace-level sensor fusion. The ultimate drift companion." />
+  <meta name="keywords" content="drift, drifting, telemetry, slip angle, G-force, car tracking, motorsport, drift score, IMU, GPS" />
+  <meta name="author" content="DriftMeter" />
+  <meta property="og:title" content="DriftMeter — Professional Drift Telemetry" />
+  <meta property="og:description" content="Transform your phone into a professional drift analyzer. Kalman-filtered slip angles, real-time G-meter, and competitive leaderboards." />
+  <meta property="og:image" content="assets/og-image.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/fav-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/fav-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/touch-180.png" />
+  <title>DriftMeter — Professional Drift Telemetry & Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #030303;
+      --bg-alt: #080808;
+      --surface: #0C0C0C;
+      --surface-elevated: #121212;
+      --border: #1A1A1A;
+      --border-light: #2A2A2A;
+      --mint: #00FFA3;
+      --mint-dim: #00CC82;
+      --peak: #FF0055;
+      --orange: #FF6B35;
+      --blue: #0095FF;
+      --purple: #A855F7;
+      --muted: #555555;
+      --text: #F0F0F0;
+      --textSecondary: #888888;
+      --textTertiary: #666666;
+      --gradient-mint: linear-gradient(135deg, #00FFA3 0%, #00CC82 100%);
+      --gradient-peak: linear-gradient(135deg, #FF0055 0%, #FF6B35 100%);
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    ::selection {
+      background: rgba(0,255,163,0.3);
+      color: var(--text);
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--mint-dim); }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      z-index: 1000;
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(rgba(0,255,163,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,163,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, black 0%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, black 0%, transparent 70%);
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    .orb-1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,255,163,0.15) 0%, transparent 70%);
+      top: -200px;
+      left: -100px;
+      animation: float 20s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255,0,85,0.1) 0%, transparent 70%);
+      top: 30%;
+      right: -150px;
+      animation: float 25s ease-in-out infinite reverse;
+    }
+    .orb-3 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0,149,255,0.08) 0%, transparent 70%);
+      bottom: 10%;
+      left: 10%;
+      animation: float 30s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+    nav.scrolled { 
+      background: rgba(3,3,3,0.85); 
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 2rem;
+    }
+    .nav-inner {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-family: 'Orbitron', monospace;
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: 0.02em;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .logo span { color: var(--mint); }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    .nav-links a {
+      color: var(--textSecondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--mint);
+      transition: width 0.2s;
+    }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta {
+      background: var(--mint) !important;
+      color: var(--bg) !important;
+      padding: 0.6rem 1.25rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(0,255,163,0.4);
+    }
+    .nav-cta::after { display: none !important; }
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 8rem 1.5rem 6rem;
+      position: relative;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(0,255,163,0.08);
+      border: 1px solid rgba(0,255,163,0.2);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--mint);
+      margin-bottom: 2rem;
+      animation: fadeInUp 0.6s ease;
+    }
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--mint);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    .hero h1 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: clamp(2.75rem, 10vw, 5.5rem);
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+    .hero h1 .line { display: block; }
+    .hero h1 .accent { 
+      color: var(--mint);
+      position: relative;
+    }
+    .hero h1 .accent::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-mint);
+      border-radius: 2px;
+      opacity: 0.6;
+    }
+    
+    .hero .tagline {
+      font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+      color: var(--textSecondary);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+      font-weight: 400;
+      line-height: 1.7;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 1rem 2rem;
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--gradient-mint);
+      color: var(--bg);
+      border: none;
+      box-shadow: 0 4px 24px rgba(0,255,163,0.25);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 40px rgba(0,255,163,0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 2px solid var(--border-light);
+    }
+    .btn-secondary:hover {
+      border-color: var(--mint);
+      color: var(--mint);
+      background: rgba(0,255,163,0.05);
+    }
+    .btn svg { width: 20px; height: 20px; }
+
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      margin-top: 4rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--border);
+      animation: fadeInUp 0.6s ease 0.4s both;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-value {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 2rem;
+      color: var(--mint);
+      line-height: 1;
+    }
+    .hero-stat-label {
+      font-size: 0.85rem;
+      color: var(--textTertiary);
+      margin-top: 0.5rem;
+    }
+
+    .hero-visual {
+      position: relative;
+      margin-top: 4rem;
+      animation: fadeInUp 0.8s ease 0.5s both;
+    }
+    .phone-mockup {
+      width: 280px;
+      height: 580px;
+      background: var(--surface);
+      border-radius: 40px;
+      border: 3px solid var(--border-light);
+      padding: 12px;
+      position: relative;
+      box-shadow: 
+        0 50px 100px -20px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,255,255,0.05) inset;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: var(--surface);
+      border-radius: 0 0 16px 16px;
+    }
+    
+    .dashboard-mock {
+      padding: 2.5rem 1rem 1rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .dash-header {
+      text-align: center;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dash-header span {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.7rem;
+      color: var(--mint);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    
+    .g-meter {
+      width: 140px;
+      height: 140px;
+      margin: 0.5rem auto;
+      background: conic-gradient(from 180deg, var(--mint) 0deg, var(--orange) 120deg, var(--peak) 240deg, var(--mint) 360deg);
+      border-radius: 50%;
+      padding: 4px;
+      position: relative;
+    }
+    .g-meter-inner {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .g-meter-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .g-meter-label {
+      font-size: 0.6rem;
+      color: var(--textTertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .g-meter-dot {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--text);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px var(--mint);
+      animation: gmove 3s ease-in-out infinite;
+    }
+    @keyframes gmove {
+      0%, 100% { transform: translate(calc(-50% + 20px), calc(-50% - 15px)); }
+      25% { transform: translate(calc(-50% - 25px), calc(-50% + 10px)); }
+      50% { transform: translate(calc(-50% + 15px), calc(-50% + 20px)); }
+      75% { transform: translate(calc(-50% - 10px), calc(-50% - 20px)); }
+    }
+    
+    .dash-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .dash-metric {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .dash-metric-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .dash-metric-value.mint { color: var(--mint); }
+    .dash-metric-value.peak { color: var(--peak); }
+    .dash-metric-label {
+      font-size: 0.55rem;
+      color: var(--textTertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+    
+    .dash-record-btn {
+      margin-top: auto;
+      background: var(--peak);
+      border: none;
+      border-radius: 12px;
+      padding: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: white;
+      letter-spacing: 0.05em;
+      animation: recordPulse 2s ease-in-out infinite;
+    }
+    @keyframes recordPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,0,85,0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(255,0,85,0); }
+    }
+    .record-dot {
+      width: 10px;
+      height: 10px;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .section {
+      padding: 7rem 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .section-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--mint);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      letter-spacing: -0.01em;
+      text-align: center;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .section-subtitle {
+      font-size: 1.1rem;
+      color: var(--textSecondary);
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 4rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gradient-mint);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feature-card:hover {
+      border-color: rgba(0,255,163,0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -20px rgba(0,255,163,0.15);
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card.large { grid-column: span 2; }
+    .feature-card.highlight {
+      background: linear-gradient(135deg, rgba(0,255,163,0.08) 0%, var(--surface) 100%);
+      border-color: rgba(0,255,163,0.2);
+    }
+    
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(0,255,163,0.12), rgba(0,255,163,0.04));
+      border: 1px solid rgba(0,255,163,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .feature-card h3 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+    .feature-card p {
+      color: var(--textSecondary);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+    .feature-tag {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      background: rgba(0,255,163,0.1);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--mint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 1rem;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+    .tech-content h3 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .tech-content p {
+      color: var(--textSecondary);
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+    .tech-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .tech-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      color: var(--textSecondary);
+      font-size: 0.95rem;
+    }
+    .tech-list-icon {
+      width: 24px;
+      height: 24px;
+      background: rgba(0,255,163,0.15);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .tech-visual {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .tech-visual::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0,255,163,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    
+    .code-block {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 1.25rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .code-block .comment { color: var(--textTertiary); }
+    .code-block .keyword { color: var(--purple); }
+    .code-block .function { color: var(--blue); }
+    .code-block .string { color: var(--mint); }
+    .code-block .number { color: var(--orange); }
+
+    .steps-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      position: relative;
+    }
+    .steps-container::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--border), var(--mint), var(--border), transparent);
+    }
+    .step {
+      text-align: center;
+      position: relative;
+    }
+    .step-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+    .step:hover .step-icon {
+      border-color: var(--mint);
+      box-shadow: 0 0 30px rgba(0,255,163,0.2);
+    }
+    .step-num {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 28px;
+      height: 28px;
+      background: var(--gradient-mint);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: var(--bg);
+    }
+    .step h4 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    .step p {
+      color: var(--textSecondary);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .score-demo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .score-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .score-header h4 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--textTertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+    .score-value {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      font-size: 5rem;
+      background: var(--gradient-mint);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .score-label {
+      font-size: 0.9rem;
+      color: var(--textSecondary);
+      margin-top: 0.5rem;
+    }
+    
+    .score-breakdown {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .score-metric {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .score-metric-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .score-metric-value {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1.75rem;
+      color: var(--text);
+    }
+    .score-metric-label {
+      font-size: 0.8rem;
+      color: var(--textTertiary);
+      margin-top: 0.25rem;
+    }
+    .score-metric-weight {
+      font-size: 0.7rem;
+      color: var(--mint);
+      margin-top: 0.5rem;
+      font-weight: 600;
+    }
+
+    .leaderboard-preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .leaderboard-header {
+      background: var(--bg);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .leaderboard-header h4 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .leaderboard-tabs { display: flex; gap: 0.5rem; }
+    .leaderboard-tab {
+      padding: 0.4rem 0.8rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--textSecondary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .leaderboard-tab.active {
+      background: var(--mint);
+      border-color: var(--mint);
+      color: var(--bg);
+    }
+    .leaderboard-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 100px 100px;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .leaderboard-row:hover { background: rgba(0,255,163,0.03); }
+    .leaderboard-row:last-child { border-bottom: none; }
+    .leaderboard-rank {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--textTertiary);
+    }
+    .leaderboard-rank.gold { color: #FFD700; }
+    .leaderboard-rank.silver { color: #C0C0C0; }
+    .leaderboard-rank.bronze { color: #CD7F32; }
+    .leaderboard-user {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .leaderboard-avatar {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--mint), var(--blue));
+      border-radius: 50%;
+    }
+    .leaderboard-name {
+      font-weight: 500;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .leaderboard-stat {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--mint);
+      text-align: right;
+    }
+    .leaderboard-score {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      text-align: right;
+    }
+
+    .trust-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+    .trust-content h3 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .trust-content p {
+      color: var(--textSecondary);
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+    }
+    .trust-checks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .trust-check {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--textSecondary);
+      font-size: 0.9rem;
+    }
+    .trust-check-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(0,255,163,0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+    
+    .trust-visual {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .shield-icon {
+      width: 120px;
+      height: 140px;
+      background: linear-gradient(180deg, rgba(0,255,163,0.2) 0%, rgba(0,255,163,0.05) 100%);
+      border: 2px solid var(--mint);
+      border-radius: 60px 60px 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .shield-icon::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(0,255,163,0.3);
+      border-radius: 56px 56px 16px 16px;
+    }
+    .trust-badge-text {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--mint);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .faq-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .faq-item:hover { border-color: rgba(0,255,163,0.3); }
+    .faq-question {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+    .faq-answer {
+      color: var(--textSecondary);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .cta-section {
+      text-align: center;
+      padding: 6rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(0,255,163,0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .cta-title {
+      font-family: 'Orbitron', monospace;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3rem);
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .cta-subtitle {
+      color: var(--textSecondary);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto 2.5rem;
+      position: relative;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 4rem 1.5rem 2rem;
+      background: var(--bg-alt);
+    }
+    .footer-inner { max-width: 1200px; margin: 0 auto; }
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+      padding-bottom: 3rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+    }
+    .footer-brand p {
+      color: var(--textSecondary);
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      max-width: 280px;
+      line-height: 1.7;
+    }
+    .footer-col h4 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1.25rem;
+    }
+    .footer-col a {
+      display: block;
+      color: var(--textSecondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+      transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--mint); }
+    
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer-copy {
+      color: var(--textTertiary);
+      font-size: 0.85rem;
+    }
+    .footer-socials {
+      display: flex;
+      gap: 1rem;
+    }
+    .footer-socials a {
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--textSecondary);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .footer-socials a:hover {
+      border-color: var(--mint);
+      color: var(--mint);
+    }
+
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .feature-card.large { grid-column: span 1; }
+      .tech-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .trust-section { grid-template-columns: 1fr; text-align: center; }
+      .trust-checks { justify-content: center; }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .mobile-menu-btn { display: block; }
+      .hero { padding-top: 6rem; }
+      .hero-stats { flex-direction: column; gap: 1.5rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-container { grid-template-columns: repeat(2, 1fr); }
+      .steps-container::before { display: none; }
+      .score-breakdown { grid-template-columns: 1fr; }
+      .faq-grid { grid-template-columns: 1fr; }
+      .leaderboard-row { grid-template-columns: 40px 1fr 80px; }
+      .leaderboard-stat { display: none; }
+      .footer-top { grid-template-columns: 1fr; text-align: center; }
+      .footer-brand p { max-width: 100%; }
+      .footer-bottom { flex-direction: column; gap: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .steps-container { grid-template-columns: 1fr; }
+      .phone-mockup { width: 240px; height: 500px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="orb orb-1" aria-hidden="true"></div>
+  <div class="orb orb-2" aria-hidden="true"></div>
+  <div class="orb orb-3" aria-hidden="true"></div>
+
+  <nav id="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-icon"><img src="assets/icon.png" alt="DriftMeter"></div>
+        Drift<span>Meter</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#technology">Technology</a>
+        <a href="#scoring">Scoring</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://apps.apple.com/app/driftmeter/idXXXXXXXXX" class="nav-cta" target="_blank" rel="noopener">Get the App</a>
+      </div>
+      <button class="mobile-menu-btn" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Professional-Grade Telemetry
+      </div>
+      <h1>
+        <span class="line">Precision Drift</span>
+        <span class="line"><span class="accent">Analytics</span></span>
+      </h1>
+      <p class="tagline">Transform your smartphone into a professional drift analyzer. Kalman-filtered slip angles, real-time G-forces, and aerospace-grade sensor fusion — all in your pocket.</p>
+      <div class="cta-row">
+        <a href="https://apps.apple.com/app/driftmeter/idXXXXXXXXX" class="btn btn-primary" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          Download for iOS
+        </a>
+        <a href="#features" class="btn btn-secondary">See How It Works</a>
+      </div>
+      
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value">60Hz</div>
+          <div class="hero-stat-label">Sensor Sampling</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">±0.5°</div>
+          <div class="hero-stat-label">Angle Accuracy</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">EKF</div>
+          <div class="hero-stat-label">Kalman Filtering</div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="phone-mockup">
+          <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="dashboard-mock">
+              <div class="dash-header">
+                <span>● LIVE SESSION</span>
+              </div>
+              <div class="g-meter">
+                <div class="g-meter-inner">
+                  <div class="g-meter-value">1.2G</div>
+                  <div class="g-meter-label">Lateral</div>
+                </div>
+                <div class="g-meter-dot"></div>
+              </div>
+              <div class="dash-metrics">
+                <div class="dash-metric">
+                  <div class="dash-metric-value mint">42°</div>
+                  <div class="dash-metric-label">Slip Angle</div>
+                </div>
+                <div class="dash-metric">
+                  <div class="dash-metric-value">78</div>
+                  <div class="dash-metric-label">km/h</div>
+                </div>
+                <div class="dash-metric">
+                  <div class="dash-metric-value peak">47°</div>
+                  <div class="dash-metric-label">Max Angle</div>
+                </div>
+                <div class="dash-metric">
+                  <div class="dash-metric-value">02:34</div>
+                  <div class="dash-metric-label">Duration</div>
+                </div>
+              </div>
+              <button class="dash-record-btn">
+                <span class="record-dot"></span>
+                RECORDING
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">Built for Serious Drifters</h2>
+      <p class="section-subtitle">Every feature engineered with precision. From the physics engine to the UI, DriftMeter is designed for drivers who demand accuracy.</p>
+      
+      <div class="features-grid">
+        <div class="feature-card large highlight">
+          <div class="feature-icon">◎</div>
+          <h3>Real-Time G-Meter Dashboard</h3>
+          <p>Watch lateral and longitudinal G-forces in real-time on a beautiful, responsive display. The G-meter visualizes your exact position on the friction circle, helping you understand weight transfer and grip limits as you push your car.</p>
+          <span class="feature-tag">Live Data</span>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📐</div>
+          <h3>Kalman-Filtered Slip Angles</h3>
+          <p>Not just raw gyro data — we use an Extended Kalman Filter to fuse high-rate IMU with GPS COG, delivering slip angle measurements accurate to ±0.5 degrees.</p>
+          <span class="feature-tag">EKF Algorithm</span>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>60Hz Sensor Fusion</h3>
+          <p>High-frequency DeviceMotion capture at 60Hz ensures you never miss a moment. Combined with GPS, every drift is reconstructed with millisecond precision.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🗺️</div>
+          <h3>GPS Route Mapping</h3>
+          <p>Every session records your full GPS path. See exactly where your best drifts happened, analyze corner entry points, and track your progression on familiar tracks.</p>
+        </div>
+        <div class="feature-card large">
+          <div class="feature-icon">🏆</div>
+          <h3>Competitive Leaderboards</h3>
+          <p>Your lifetime stats feed into global leaderboards. Compare your best maximum angle, highest entry speed, longest drift duration, and overall drift scores against drivers worldwide. Rise through the ranks and prove you're the best.</p>
+          <span class="feature-tag">Global Rankings</span>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Drift-by-Drift Analysis</h3>
+          <p>Each drift is automatically detected and scored. Review entry speed, exit speed, max angle, average speed, and duration for every single drift in your session.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📁</div>
+          <h3>Session History Vault</h3>
+          <p>All your sessions stored locally and synced. Filter by date, track, or score. Your complete drift history at your fingertips.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3>One-Tap Sharing</h3>
+          <p>Generate shareable links instantly. No sign-up required — anonymous device IDs keep it simple while letting you flex your best runs.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="technology">
+      <span class="section-label">Technology</span>
+      <h2 class="section-title">Aerospace-Grade Algorithms</h2>
+      <p class="section-subtitle">The same sensor fusion techniques used in aircraft navigation systems, now measuring your slip angles.</p>
+      
+      <div class="tech-grid">
+        <div class="tech-content">
+          <h3>GPS-IMU Time Alignment</h3>
+          <p>GPS data typically lags behind IMU data by 0.5 to 1.5 seconds. Most apps ignore this — we don't. Our backend uses scipy cross-correlation to compare yaw rate against the derivative of GPS Course Over Ground, calculating the exact sample lag and shifting GPS data backward in time for perfect alignment.</p>
+          <ul class="tech-list">
+            <li>
+              <span class="tech-list-icon">⏱</span>
+              <span>Sub-millisecond time synchronization between sensors</span>
+            </li>
+            <li>
+              <span class="tech-list-icon">📡</span>
+              <span>Cross-correlation analysis for optimal lag detection</span>
+            </li>
+            <li>
+              <span class="tech-list-icon">🎯</span>
+              <span>True slip angle = heading - GPS course over ground</span>
+            </li>
+          </ul>
+        </div>
+        <div class="tech-visual">
+          <div class="code-block">
+            <span class="comment"># Extended Kalman Filter for slip angle</span><br>
+            <span class="keyword">def</span> <span class="function">process_session</span>(imu_data, gps_data):<br>
+            &nbsp;&nbsp;<span class="comment"># Align GPS lag via cross-correlation</span><br>
+            &nbsp;&nbsp;lag = <span class="function">correlate_yaw_cog</span>(imu_data, gps_data)<br>
+            &nbsp;&nbsp;gps_aligned = <span class="function">shift_samples</span>(gps_data, lag)<br>
+            <br>
+            &nbsp;&nbsp;<span class="comment"># EKF: predict with gyro, update with GPS</span><br>
+            &nbsp;&nbsp;ekf = <span class="function">KalmanFilter</span>(dim_x=<span class="number">2</span>, dim_z=<span class="number">1</span>)<br>
+            &nbsp;&nbsp;ekf.Q = <span class="number">0.01</span> <span class="comment"># Process noise</span><br>
+            &nbsp;&nbsp;ekf.R = <span class="number">5.0</span>  <span class="comment"># GPS measurement noise</span><br>
+            <br>
+            &nbsp;&nbsp;<span class="keyword">for</span> sample <span class="keyword">in</span> aligned_data:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;ekf.<span class="function">predict</span>()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;ekf.<span class="function">update</span>(sample.gps_cog)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;slip_angle = ekf.x[<span class="number">0</span>] - sample.gps_cog<br>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how">
+      <span class="section-label">How It Works</span>
+      <h2 class="section-title">Four Steps to Precision</h2>
+      <p class="section-subtitle">From mounting to analysis in under a minute. No external hardware required.</p>
+      
+      <div class="steps-container">
+        <div class="step">
+          <div class="step-icon">
+            📱
+            <span class="step-num">1</span>
+          </div>
+          <h4>Mount & Secure</h4>
+          <p>Fix your phone rigidly in your car. Dashboard mount, windshield, or any stable surface works.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">
+            ⚖️
+            <span class="step-num">2</span>
+          </div>
+          <h4>Calibrate Sensors</h4>
+          <p>Tap calibrate while stationary. We establish your baseline orientation and zero all axes.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">
+            🎬
+            <span class="step-num">3</span>
+          </div>
+          <h4>Start Recording</h4>
+          <p>Hit record and drive. Our 60Hz capture runs in background. Drift as much as you want.</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">
+            📈
+            <span class="step-num">4</span>
+          </div>
+          <h4>Analyze & Compare</h4>
+          <p>Stop recording. Get instant analysis: slip angles, speeds, scores, and your position on the leaderboard.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="scoring">
+      <span class="section-label">Scoring System</span>
+      <h2 class="section-title">Your Drift, Quantified</h2>
+      <p class="section-subtitle">A composite score that rewards angle, speed, and control. Master all three to top the leaderboard.</p>
+      
+      <div class="score-demo">
+        <div class="score-header">
+          <h4>Drift Score</h4>
+          <div class="score-value">87</div>
+          <div class="score-label">out of 100 possible points</div>
+        </div>
+        <div class="score-breakdown">
+          <div class="score-metric">
+            <div class="score-metric-icon">📐</div>
+            <div class="score-metric-value">47°</div>
+            <div class="score-metric-label">Max Slip Angle</div>
+            <div class="score-metric-weight">50% weight</div>
+          </div>
+          <div class="score-metric">
+            <div class="score-metric-icon">⚡</div>
+            <div class="score-metric-value">82 km/h</div>
+            <div class="score-metric-label">Entry Speed</div>
+            <div class="score-metric-weight">30% weight</div>
+          </div>
+          <div class="score-metric">
+            <div class="score-metric-icon">⏱</div>
+            <div class="score-metric-value">4.2s</div>
+            <div class="score-metric-label">Duration</div>
+            <div class="score-metric-weight">20% weight</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <span class="section-label">Competition</span>
+      <h2 class="section-title">Global Leaderboards</h2>
+      <p class="section-subtitle">See how your skills stack up against drifters worldwide.</p>
+      
+      <div class="leaderboard-preview">
+        <div class="leaderboard-header">
+          <h4>🏆 Top Drift Scores</h4>
+          <div class="leaderboard-tabs">
+            <button class="leaderboard-tab active">All Time</button>
+            <button class="leaderboard-tab">This Week</button>
+            <button class="leaderboard-tab">Today</button>
+          </div>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank gold">1</span>
+          <div class="leaderboard-user">
+            <div class="leaderboard-avatar"></div>
+            <span class="leaderboard-name">TireSlayer_JP</span>
+          </div>
+          <span class="leaderboard-stat">63°</span>
+          <span class="leaderboard-score">98</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank silver">2</span>
+          <div class="leaderboard-user">
+            <div class="leaderboard-avatar"></div>
+            <span class="leaderboard-name">DriftKing2024</span>
+          </div>
+          <span class="leaderboard-stat">58°</span>
+          <span class="leaderboard-score">95</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank bronze">3</span>
+          <div class="leaderboard-user">
+            <div class="leaderboard-avatar"></div>
+            <span class="leaderboard-name">SlidewaysSam</span>
+          </div>
+          <span class="leaderboard-stat">55°</span>
+          <span class="leaderboard-score">92</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">4</span>
+          <div class="leaderboard-user">
+            <div class="leaderboard-avatar"></div>
+            <span class="leaderboard-name">AngleAttack</span>
+          </div>
+          <span class="leaderboard-stat">52°</span>
+          <span class="leaderboard-score">89</span>
+        </div>
+        <div class="leaderboard-row">
+          <span class="leaderboard-rank">5</span>
+          <div class="leaderboard-user">
+            <div class="leaderboard-avatar"></div>
+            <span class="leaderboard-name">SmokeMachine</span>
+          </div>
+          <span class="leaderboard-stat">51°</span>
+          <span class="leaderboard-score">87</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="trust-section">
+        <div class="trust-content">
+          <h3>Anti-Cheat Validation</h3>
+          <p>Leaderboards mean nothing if they can be faked. DriftMeter uses physics-based validation to ensure every recorded drift is legitimate. No shaking phones in pockets, no simulator exploits — just real driving.</p>
+          <div class="trust-checks">
+            <div class="trust-check">
+              <span class="trust-check-icon">🚗</span>
+              <span>Min speed &gt;15 km/h</span>
+            </div>
+            <div class="trust-check">
+              <span class="trust-check-icon">🔄</span>
+              <span>Max yaw rate limits</span>
+            </div>
+            <div class="trust-check">
+              <span class="trust-check-icon">📊</span>
+              <span>Z-axis variance check</span>
+            </div>
+            <div class="trust-check">
+              <span class="trust-check-icon">⚡</span>
+              <span>Lateral G validation</span>
+            </div>
+          </div>
+        </div>
+        <div class="trust-visual">
+          <div class="shield-icon">🛡️</div>
+          <span class="trust-badge-text">Physics Verified</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <span class="section-label">FAQ</span>
+      <h2 class="section-title">Common Questions</h2>
+      <p class="section-subtitle">Everything you need to know about DriftMeter.</p>
+      
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h4 class="faq-question">How accurate is the slip angle measurement?</h4>
+          <p class="faq-answer">Our Kalman-filtered approach achieves ±0.5° accuracy under normal conditions. The Extended Kalman Filter fuses 60Hz gyroscope data with GPS course-over-ground, correcting for sensor drift and noise in real-time.</p>
+        </div>
+        <div class="faq-item">
+          <h4 class="faq-question">Do I need any external hardware?</h4>
+          <p class="faq-answer">No. DriftMeter uses only your phone's built-in sensors (accelerometer, gyroscope, GPS). Just a solid phone mount is recommended for best accuracy.</p>
+        </div>
+        <div class="faq-item">
+          <h4 class="faq-question">How does anti-cheat work?</h4>
+          <p class="faq-answer">We analyze physics signatures: minimum speed thresholds, maximum yaw rate limits (phones spinning in hand exceed car limits), Z-axis variance (detects loose/handheld phone), and lateral G correlation with slip angle.</p>
+        </div>
+        <div class="faq-item">
+          <h4 class="faq-question">Does it work on track or only public roads?</h4>
+          <p class="faq-answer">DriftMeter works anywhere you can get GPS signal. Track days, skidpads, parking lots, mountain roads — anywhere you drift, we measure.</p>
+        </div>
+        <div class="faq-item">
+          <h4 class="faq-question">Can I use it without internet?</h4>
+          <p class="faq-answer">Yes. Recording works fully offline. Sessions are processed and synced when you reconnect. Your leaderboard position updates once you're back online.</p>
+        </div>
+        <div class="faq-item">
+          <h4 class="faq-question">What phones are supported?</h4>
+          <p class="faq-answer">Any iPhone with iOS 15+ that has gyroscope and GPS capabilities. Newer phones with better IMU hardware will produce slightly more accurate results.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <h2 class="cta-title">Ready to Quantify Your Drift?</h2>
+      <p class="cta-subtitle">Join thousands of drivers using professional-grade telemetry. Download DriftMeter today.</p>
+      <div class="cta-row">
+        <a href="https://apps.apple.com/app/driftmeter/idXXXXXXXXX" class="btn btn-primary" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          Download for iOS
+        </a>
+        <a href="mailto:hello@driftmeter.app" class="btn btn-secondary">Contact Us</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <div class="logo-icon"><img src="assets/icon.png" alt="DriftMeter"></div>
+            Drift<span>Meter</span>
+          </a>
+          <p>Professional-grade drift telemetry for your smartphone. Measure slip angles with aerospace-level precision.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#features">Features</a>
+          <a href="#technology">Technology</a>
+          <a href="#scoring">Scoring</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="#faq">FAQ</a>
+          <a href="mailto:hello@driftmeter.app">Support</a>
+          <a href="#">Press Kit</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-copy">© 2026 DriftMeter. All rights reserved.</span>
+        <div class="footer-socials">
+          <a href="#" aria-label="Twitter">𝕏</a>
+          <a href="#" aria-label="Instagram">◐</a>
+          <a href="#" aria-label="YouTube">▶</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const nav = document.getElementById('nav');
+      let ticking = false;
+      
+      function updateNav() {
+        if (window.scrollY > 50) {
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
+        ticking = false;
+      }
+      
+      window.addEventListener('scroll', function() {
+        if (!ticking) {
+          requestAnimationFrame(updateNav);
+          ticking = true;
+        }
+      }, { passive: true });
+      
+      updateNav();
+    })();
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href === '#') return;
+        
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .step, .faq-item, .pricing-card').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(el);
+    });
+
+    const gMeterValue = document.querySelector('.g-meter-value');
+    const slipValue = document.querySelector('.dash-metric-value.mint');
+    const gValues = ['1.2G', '0.9G', '1.4G', '1.1G', '0.8G', '1.3G'];
+    const slipValues = ['42°', '38°', '45°', '41°', '36°', '44°'];
+    let valueIndex = 0;
+
+    setInterval(() => {
+      valueIndex = (valueIndex + 1) % gValues.length;
+      if (gMeterValue) gMeterValue.textContent = gValues[valueIndex];
+      if (slipValue) slipValue.textContent = slipValues[valueIndex];
+    }, 2000);
+  </script>
+</body>
+</html>
